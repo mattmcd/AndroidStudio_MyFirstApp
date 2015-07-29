@@ -3,6 +3,7 @@
 import os
 import sys
 import time
+import subprocess
 try:
     ANDROID_VIEW_CLIENT_HOME = os.environ['ANDROID_VIEW_CLIENT_HOME']
 except:
@@ -21,7 +22,10 @@ from com.dtmilano.android.viewclient import ViewClient
 device, serialno = ViewClient.connectToDeviceOrExit(serialno='emulator-5554')
 
 # Install the application package to this device
-os.system('adb install app/build/outputs/apk/app-debug.apk')
+with open(os.devnull, 'w') as devnull:
+    subprocess.call(['adb', 'install',
+    'app/build/outputs/apk/app-debug.apk'], stdout=devnull, stderr=devnull)
+
 
 try:
     # Set package and activity to be started
@@ -57,4 +61,6 @@ try:
 
 finally:
     # Uninstall 
-    os.system('adb uninstall ' + package)
+    with open(os.devnull, 'w') as devnull:
+        subprocess.call(['adb', 'uninstall', package], stdout=devnull,
+        stderr=devnull);
