@@ -1,24 +1,60 @@
-# Acceptance test using monkeyrunner
-# Run using: monkyrunner test_app.py
+# Acceptance test using Android Client View
+# Run using: python test_app.py
+import os
+import sys
+import time
+try:
+    ANDROID_VIEW_CLIENT_HOME = os.environ['ANDROID_VIEW_CLIENT_HOME']
+except:
+    print 'VC Home not set'
+    sys.exit(1)
 
-from com.android.monkeyrunner import MonkeyRunner, MonkeyDevice
+sys.path.append(ANDROID_VIEW_CLIENT_HOME)
+
+from com.dtmilano.android.viewclient import ViewClient
 
 # Connect to device that is running the test
 # To check which devices are running: adb devices
 # To start an emulator: emulator -avd <device_name>
 #   e.g. emulator -avd my_nexus7_API_22
 # Note that Android/Sdk/{platform-tools,tools} need to be on path
-device = MonkeyRunner.waitForConnection()
+device, serialno = ViewClient.connectToDeviceOrExit(serialno='emulator-5554')
 
 # Install the application package to this device
-device.installPackage('app/build/outputs/apk/app-debug.apk')
+os.system('adb install app/build/outputs/apk/app-debug.apk')
 
-# Set package and activity to be started
-package = 'com.mycompany.myfirstapp'
-activity = '.MyActivity'
-runComponent = package +'/' + activity
+try:
+    # Set package and activity to be started
+    package = 'com.mycompany.myfirstapp'
+    activity = '.MyActivity'
+    runComponent = package +'/' + activity
 
-# Run the activity on the device
-device.startActivity(component=runComponent)
+    # Run the activity on the device
+    device.startActivity(component=runComponent)
 
+    # Pause
+    time.sleep(2)
+    activityName = device.getTopActivityName()
 
+    vc = ViewClient(device, serialno)
+    vc.dump()
+
+    editMsg = vc.findViewByIdOrRaise( package + ':' + 'id/edit_message')
+    editMsg.touch()
+    editMsg.type('Hello world!')
+    
+    # Pause
+    time.sleep(1)
+
+    buttonSend = vc.findViewByIdOrRaise( package + ':' + 'id/button_send')
+    buttonSend.touch();
+
+    # Pause
+    time.sleep(2)
+    if not (device.getTopActivityName() == activityName) :
+        # Activity crashed
+        print 'Crashed!'
+
+finally:
+    # Uninstall 
+    os.system('adb uninstall ' + package)
