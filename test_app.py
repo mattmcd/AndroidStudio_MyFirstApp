@@ -16,13 +16,57 @@ from com.dtmilano.android.viewclient import ViewClient
 
 class TestAppEndToEnd():
 
+    def testEnterTextAndSendMessage(self):
+        # Run the activity on the device
+        self.startMyActivity()
+        self.enterHelloWorldInEditBox()
+        self.pressSendButton()
+        # Check that we respond to input and user actions
+        self.checkThatCurrentActivityIs('DisplayMessageActivity')
+        self.checkThatMessageIsDisplayed(
+            'id/text_display', 'Hello world!')
+
+    def startMyActivity(self):
+        runComponent = self.package +'/' + self.activity
+        self.device.startActivity(component=runComponent)
+        # Pause
+        time.sleep(1)
+        activityName = self.device.getTopActivityName()
+        self.vc = ViewClient(self.device, self.serialno)
+        self.vc.dump()
+
+    def enterHelloWorldInEditBox(self):
+        editMsg = self.getViewById('id/edit_message')
+        editMsg.touch()
+        editMsg.type('Hello world!')
+        
+    def pressSendButton(self):
+        buttonSend = self.getViewById('id/button_send')
+        buttonSend.touch();
+        time.sleep(1)
+        
+    def checkThatCurrentActivityIs(self, name):
+        assert( self.device.getTopActivityName() == 
+            (self.package + '/' + name) )
+        
+    def checkThatMessageIsDisplayed(self, view_id, msg):
+        # Update view client
+        self.vc.dump()
+        textDisplay = self.getViewById(view_id)
+        assert( textDisplay.text == msg )
+
+    def getViewById(self, view_id):
+        view_instance = self.vc.findViewByIdOrRaise( 
+            self.package + ':' + view_id )
+        return view_instance
+        
     def __init__(self):
         self.device = None
         self.serialno = None
+        self.vc = None
         # Set package and activity to be started
         self.package = 'com.mycompany.myfirstapp'
         self.activity = '.MyActivity'
-        self.runComponent = self.package +'/' + self.activity
 
     def setUp(self):
         # Connect to device that is running the test
@@ -39,35 +83,7 @@ class TestAppEndToEnd():
             subprocess.call(['adb', 'install',
             'app/build/outputs/apk/app-debug.apk'], 
             stdout=devnull, stderr=devnull)
-
-    def testEnterTextAndSendMessage(self):
-
-        # Run the activity on the device
-        self.device.startActivity(component=self.runComponent)
-
-        # Pause
-        time.sleep(1)
-        activityName = self.device.getTopActivityName()
-
-        vc = ViewClient(self.device, self.serialno)
-        vc.dump()
-
-        editMsg = vc.findViewByIdOrRaise( 
-            self.package + ':' + 'id/edit_message')
-        editMsg.touch()
-        editMsg.type('Hello world!')
-        
-        # Pause
-        time.sleep(1)
-
-        buttonSend = vc.findViewByIdOrRaise( 
-            self.package + ':' + 'id/button_send')
-        buttonSend.touch();
-
-        # Pause
-        time.sleep(1)
-        assert(self.device.getTopActivityName() == activityName)
-
+    
     def tearDown(self):
         # Uninstall 
         with open(os.devnull, 'w') as devnull:
