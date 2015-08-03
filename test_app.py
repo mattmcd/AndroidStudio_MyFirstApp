@@ -22,9 +22,9 @@ class TestAppEndToEnd():
         self.enterHelloWorldInEditBox()
         self.pressSendButton()
         # Check that we respond to input and user actions
-        self.checkThatCurrentActivityIs('DisplayMessageActivity')
+        self.checkThatCurrentActivityIs('.DisplayMessageActivity')
         self.checkThatMessageIsDisplayed(
-            'id/text_display', 'Hello world!')
+            'id/text_message', self.TEST_MESSAGE)
 
     def startMyActivity(self):
         runComponent = self.package +'/' + self.activity
@@ -38,7 +38,7 @@ class TestAppEndToEnd():
     def enterHelloWorldInEditBox(self):
         editMsg = self.getViewById('id/edit_message')
         editMsg.touch()
-        editMsg.type('Hello world!')
+        editMsg.type(self.TEST_MESSAGE)
         
     def pressSendButton(self):
         buttonSend = self.getViewById('id/button_send')
@@ -52,8 +52,8 @@ class TestAppEndToEnd():
     def checkThatMessageIsDisplayed(self, view_id, msg):
         # Update view client
         self.vc.dump()
-        textDisplay = self.getViewById(view_id)
-        assert( textDisplay.text == msg )
+        textDisplay = self.getViewById(view_id).getText();
+        assert( textDisplay == msg )
 
     def getViewById(self, view_id):
         view_instance = self.vc.findViewByIdOrRaise( 
@@ -67,6 +67,7 @@ class TestAppEndToEnd():
         # Set package and activity to be started
         self.package = 'com.mycompany.myfirstapp'
         self.activity = '.MyActivity'
+        self.TEST_MESSAGE = 'This is a test message'
 
     def setUp(self):
         # Connect to device that is running the test
